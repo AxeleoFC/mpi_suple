@@ -9,8 +9,8 @@
 
 static int rgb=3;
 
-std::vector<sf::Uint8> recorrerImgEscalaGris(const sf::Uint8 * img, int width, int height){
-    std::vector<sf::Uint8> buffer(width * height);
+std::vector<uint8_t> recorrerImgEscalaGris(const uint8_t * img, int width, int height){
+    std::vector<uint8_t> buffer(width * height);
     for (int i = 0; i < height; ++i) {
         for (int j = 0; j < width; ++j) {
             int index = (i * width + j) * rgb;
@@ -31,10 +31,11 @@ int main(int argc, char** argv) {
     int width, height, channels;
     int filas_por_ranks;
     int filas_r;
-    std::vector<sf::Uint8 > imgFinal;
+    uint8_t* rgb_pixels;
+    std::vector<uint8_t > imgFinal;
 
     if(rank==0){
-        uint8_t* rgb_pixels =
+        rgb_pixels =
                 stbi_load("../image01.jpg", &width, &height, &channels, STBI_rgb);
         filas_por_ranks=std::ceil((double )height/nprocs);
         imgFinal.resize(width*height);
@@ -53,13 +54,13 @@ int main(int argc, char** argv) {
     int pixel_por_filas = width*rgb;
     int pixel_por_filas_reto = width;
 
-    std::vector<sf::Uint8> buffer((fin_filas-inicio_filas)*pixel_por_filas);
+    std::vector<uint8_t> buffer((fin_filas-inicio_filas)*pixel_por_filas);
 
     MPI_Scatter(rgb_pixels, pixel_por_filas * filas_r,MPI_UNSIGNED_CHAR,
                 buffer.data(), pixel_por_filas * filas_r,MPI_UNSIGNED_CHAR,
                 0, MPI_COMM_WORLD);
 
-    std::vector<sf::Uint8> gris= recorrerImgEscalaGris(buffer.data(),width,filas_r);
+    std::vector<uint8_t> gris= recorrerImgEscalaGris(buffer.data(),width,filas_r);
 
     MPI_Gather(gris.data(), pixel_por_filas_reto*filas_r,MPI_UNSIGNED_CHAR,
                imgFinal.data(), pixel_por_filas_reto*filas_r,MPI_UNSIGNED_CHAR,
